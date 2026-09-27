@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permintaan Maaf Untukmu 💕</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Poppins:wght@300;400;500;600;700&family=Sacramento&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .font-handwriting {
+            font-family: 'Caveat', cursive;
+        }
+
+        .font-romantic {
+            font-family: 'Sacramento', cursive;
+        }
+
+        /* Floating Background Hearts Animation */
+        @keyframes floatHeart {
+            0% {
+                transform: translateY(100vh) scale(0.3) rotate(0deg);
+                opacity: 0;
+            }
+            20% {
+                opacity: 0.85;
+            }
+            80% {
+                opacity: 0.85;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.3) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .floating-heart {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1;
+            animation: floatHeart linear infinite;
+        }
+
+        /* Floating Emoji Effect on Button Dodge */
+        @keyframes floatUpFade {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1.5) rotate(20deg);
+            }
+        }
+
+        .animate-emoji-pop {
+            animation: floatUpFade 0.9s ease-out forwards;
+        }
+
+        /* Button Pulse Glow */
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(244, 63, 94, 0.5), 0 0 30px rgba(244, 63, 94, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(244, 63, 94, 0.9), 0 0 50px rgba(244, 63, 94, 0.6);
+            }
+        }
+
+        .btn-pulse {
+            animation: pulseGlow 2s infinite;
+        }
+
+        /* Slide Up Animation for Message Box */
+        @keyframes slideUpMessage {
+            0% {
+                opacity: 0;
+                transform: translateY(40px) scale(0.96);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .animate-slide-up {
+            animation: slideUpMessage 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Photo Frame Shadow & Glow */
+        .photo-frame {
+            box-shadow: 0 12px 35px -5px rgba(225, 29, 72, 0.3), 0 0 20px rgba(251, 113, 133, 0.35);
+            transition: transform 0.4s ease;
+        }
+        
+        .photo-frame:hover {
+            transform: rotate(-1.5deg) scale(1.03);
+        }
+
+        /* Dynamic Runaway Button Smooth Transition */
+        #btnNo {
+            transition: left 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275), top 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 50;
+        }
+
+        /* Toast Popup Animation */
+        @keyframes toastFade {
+            0% { opacity: 0; transform: translate(-50%, 20px); }
+            15% { opacity: 1; transform: translate(-50%, 0); }
+            85% { opacity: 1; transform: translate(-50%, 0); }
+            100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
+
+        .animate-toast {
+            animation: toastFade 3s ease-in-out forwards;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffe4e6;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f43f5e;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-pink-100 via-rose-100 to-pink-200 min-h-screen relative flex flex-col items-center justify-center p-3 sm:p-6 overflow-x-hidden text-gray-800">
+
+    <!-- Background Hearts Particle Container -->
+    <div id="bgHeartsContainer" class="fixed inset-0 pointer-events-none z-0 overflow-hidden"></div>
+
+    <!-- Canvas for Confetti & Heart Explosion -->
+    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-40"></canvas>
+
+    <!-- Custom Toast Message Notification -->
+    <div id="toastContainer" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none"></div>
+
+    <!-- Audio Element (Romantic instrumental tune default) -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="ISELL.mp3" type="audio/mp3">
+        Browser kamu tidak mendukung pemutaran musik.
+    </audio>
+
+    <!-- Floating Audio Control & Widget Pill -->
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-2 bg-white/85 backdrop-blur-md hover:bg-white p-2 sm:p-2.5 rounded-full shadow-lg border border-rose-200 transition-all duration-300">
+        <button id="audioToggleBtn" onclick="toggleAudio()" class="flex items-center justify-center w-8 h-8 rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-colors shadow">
+            <i id="audioIcon" class="fas fa-music text-xs"></i>
+        </button>
+        <div class="hidden sm:flex flex-col pr-2 text-left min-w-[100px]">
+            <span id="audioTrackName" class="text-[11px] font-semibold text-rose-600 truncate max-w-[110px]">Musik Romantis</span>
+            <div class="w-full bg-rose-100 rounded-full h-1.5 mt-1 overflow-hidden cursor-pointer" onclick="seekAudio(event)">
+                <div id="audioProgressBar" class="bg-rose-500 h-full w-0 transition-all duration-100"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Customization Drawer Trigger -->
+    <button onclick="toggleCustomModal()" class="fixed top-4 left-4 z-50 bg-white/85 backdrop-blur-md hover:bg-white text-rose-500 p-2.5 sm:px-4 sm:py-2.5 rounded-full shadow-lg border border-rose-200 transition-all transform hover:scale-105 flex items-center gap-2 font-medium text-xs sm:text-sm">
+        <i class="fas fa-sliders-h text-rose-500"></i>
+        <span class="hidden sm:inline">Ubah Foto & Pesan</span>
+    </button>
+
+    <!-- Tap to Start Audio Overlay (for browsers restricting autoplay) -->
+    <div id="autoplayModal" class="fixed inset-0 bg-pink-950/40 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-opacity duration-500">
+        <div class="bg-white/95 backdrop-blur-xl p-6 sm:p-8 rounded-3xl shadow-2xl text-center max-w-sm border border-pink-200 transform animate-bounce">
+            <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fas fa-heart animate-pulse"></i>
+            </div>
+            <h3 class="text-xl font-bold text-rose-600 mb-2">Ada Surat Untukmu 💕</h3>
+            <p class="text-xs sm:text-sm text-gray-600 mb-6 leading-relaxed">
+                Ketuk tombol di bawah untuk membuka surat spesial beserta musik romantis...
+            </p>
+            <button onclick="startAppWithAudio()" class="w-full bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white font-semibold py-3 px-6 rounded-full shadow-lg hover:from-rose-600 hover:to-pink-600 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 text-sm">
+                <i class="fas fa-envelope-open-text"></i> Buka Surat Cinta
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main class="relative z-10 w-full max-w-lg mx-auto my-auto py-4 sm:py-6">
+        
+        <!-- INITIAL VIEW: Permintaan Maaf (Screen 1) -->
+        <div id="apologyCard" class="bg-white/85 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/70 text-center relative overflow-hidden transition-all duration-700 transform">
+            
+            <!-- Decorative Floating Emojis in Card -->
+            <span class="absolute top-3 left-4 text-xl sm:text-2xl animate-pulse">🌸</span>
+            <span class="absolute top-3 right-4 text-xl sm:text-2xl animate-pulse">✨</span>
+
+            <!-- Recipient Badge -->
+            <div class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-600 text-xs font-semibold px-3.5 py-1 rounded-full mb-5 border border-rose-200/80">
+                <i class="fas fa-heart text-[10px] text-rose-500"></i>
+                <span id="displayRecipientName">Untuk: Sayangku 💕</span>
+            </div>
+
+            <!-- Photo 1 Frame Container -->
+            <div class="relative w-48 h-48 sm:w-56 sm:h-56 mx-auto mb-6">
+                <div class="photo-frame bg-white p-3 rounded-3xl transform -rotate-2 border border-rose-100 w-full h-full relative">
+                    <img id="displayPhoto1" src="Isel.1.jpg" 
+                         alt="Foto Sedih / Permintaan Maaf" 
+                         class="w-full h-full object-cover rounded-2xl shadow-inner">
+                    <span class="absolute -bottom-2 -right-2 bg-rose-500 text-white text-xs px-3.5 py-1 rounded-full shadow-md font-handwriting text-base">
+                        🥺 Maafin Aku Ya...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Title & Sincere Message -->
+            <h1 id="apologyTitle" class="text-2xl sm:text-3xl font-bold text-rose-600 mb-2 leading-tight font-handwriting text-3xl sm:text-4xl">
+                Maafin Aku Ya Sayang? 🥺👉👈
+            </h1>
+            <p id="apologySubtitle" class="text-gray-600 text-xs sm:text-sm mb-6 px-2 font-light leading-relaxed">
+                Aku tau aku udah bikin kamu kesel dan kecewa... Aku beneran minta maaf ya dari lubuk hatiku yang paling dalam. Minta tolong maafin aku ya? 💕
+            </p>
+
+            <!-- Dynamic Tooltip Hint on Button Dodge -->
+            <div id="hoverNotice" class="h-6 mb-3 text-xs sm:text-sm font-semibold text-rose-500 transition-opacity duration-300 opacity-0 flex items-center justify-center gap-1">
+                <span>Eits! Tidak bisa diklik dong 😜</span>
+            </div>
+
+            <!-- Interactive Choice Buttons -->
+            <div id="buttonArea" class="relative min-h-[120px] flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                
+                <!-- Yes Button ("Dimaafkan 💖") -->
+                <button id="btnYes" onclick="acceptApology()" 
+                        class="btn-pulse bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 text-white font-bold py-3.5 px-8 rounded-full shadow-lg hover:brightness-110 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto z-20">
+                    <i class="fas fa-heart"></i> Dimaafkan 💖
+                </button>
+
+                <!-- No Button ("Tidak Dimaafkan 😜") - EVASIVE RUNAWAY BUTTON -->
+                <button id="btnNo" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-full shadow transition-all duration-150 text-xs sm:text-sm w-full sm:w-auto border border-gray-300 whitespace-nowrap cursor-pointer select-none">
+                    Tidak Dimaafkan 😜
+                </button>
+            </div>
+        </div>
+
+        <!-- SUCCESS VIEW: Forgiveness Screen (Screen 2) -->
+        <div id="successCard" class="hidden bg-white/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/80 text-center relative overflow-hidden transition-all duration-700 transform scale-95 opacity-0">
+            
+            <div class="inline-block bg-pink-100 text-rose-600 font-medium px-4 py-1.5 rounded-full text-xs sm:text-sm mb-4 animate-bounce border border-pink-200">
+                🎉 YAYY! TERIMA KASIH SAYANG! 🥰
+            </div>
+
+            <!-- Photo 2 Frame Container -->
+            <div class="relative w-52 h-52 sm:w-60 sm:h-60 mx-auto mb-6">
+                <div class="photo-frame bg-white p-3 rounded-3xl transform rotate-2 border border-rose-200 w-full h-full relative">
+                    <img id="displayPhoto2" src="Isell.jpg" 
+                         alt="Foto Bahagia / Bersama" 
+                         class="w-full h-full object-cover rounded-2xl shadow-inner">
+                    <div class="absolute -top-3 -left-3 bg-rose-500 text-white w-9 h-9 rounded-full shadow-lg flex items-center justify-center text-base">
+                        💖
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-rose-600 mb-2 font-handwriting">
+                I Love You So Much! ❤️
+            </h2>
+
+            <!-- Sweet Words Sliding Container (Cards reveal from bottom) -->
+            <div id="sweetMessageContainer" class="space-y-3 my-6 text-left">
+                <!-- Dynamic cards inserted here with slide-up & typewriter effect -->
+            </div>
+
+            <!-- Action Buttons on Success View -->
+            <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-6 pt-4 border-t border-rose-100">
+                <button onclick="resetView()" class="text-xs sm:text-sm text-gray-500 hover:text-rose-600 underline transition-colors flex items-center gap-1.5">
+                    <i class="fas fa-redo-alt"></i> Ulangi Tampilan
+                </button>
+                <button onclick="shareLove()" class="bg-rose-100 hover:bg-rose-200 text-rose-600 text-xs sm:text-sm font-semibold px-5 py-2.5 rounded-full transition-colors flex items-center gap-2 shadow-sm">
+                    <i class="fas fa-paper-plane"></i> Kirim Pesan Ke WhatsApp 📲
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- CUSTOMIZATION MODAL (Allows uploading 2 photos, music file/URL, and custom texts) -->
+    <div id="customModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 transition-all">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-pink-100 max-h-[90vh] overflow-y-auto relative">
+            
+            <div class="flex justify-between items-center mb-5 border-b border-gray-100 pb-3">
+                <h3 class="text-lg font-bold text-rose-600 flex items-center gap-2">
+                    <i class="fas fa-sliders-h"></i> Pengaturan Konten & Foto
+                </h3>
+                <button onclick="toggleCustomModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-full">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <form id="customForm" onsubmit="saveCustomization(event)" class="space-y-4">
+                <!-- Recipient Name -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Nama Penerima</label>
+                    <input type="text" id="inputRecipient" placeholder="Sayangku 💕" class="w-full text-xs sm:text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-rose-400 focus:outline-none">
+                </div>
+
+                <!-- Photo 1 Input -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">
+                        Foto 1 (Tampilan Awal - Sedih/Minta Maaf 🥺)
+                    </label>
+                    <input type="file" id="inputPhoto1" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 border border-gray-200 rounded-xl p-1">
+                </div>
+
+                <!-- Photo 2 Input -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">
+                        Foto 2 (Setelah Dimaafkan - Bahagia 🥰)
+                    </label>
+                    <input type="file" id="inputPhoto2" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 border border-gray-200 rounded-xl p-1">
+                </div>
+
+                <!-- Custom Title -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Judul Permintaan Maaf</label>
+                    <input type="text" id="inputTitle" placeholder="Maafin Aku Ya Sayang? 🥺👉👈" class="w-full text-xs sm:text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-rose-400 focus:outline-none">
+                </div>
+
+                <!-- Custom Subtitle Message -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Pesan Singkat Awal</label>
+                    <textarea id="inputSubtitle" rows="2" placeholder="Aku tau aku udah bikin kamu kesel..." class="w-full text-xs sm:text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-rose-400 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Custom Sweet Messages -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">
+                        Pesan Romantis Setelah Dimaafkan (Pisahkan dengan koma `,`)
+                    </label>
+                    <textarea id="inputSweetMessages" rows="3" placeholder="Makasih banyak ya udah maafin aku! ❤️, Aku janji gak bikin kamu sedih lagi 🥺, I love you to the moon and back 🌙✨" class="w-full text-xs sm:text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-rose-400 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Custom Music Audio File / URL -->
+                <div class="border-t border-gray-100 pt-3">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Upload File Lagu MP3 (Opsional)</label>
+                    <input type="file" id="inputMusicFile" accept="audio/*" class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100 border border-gray-200 rounded-xl p-1 mb-2">
+                    
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Atau Link Musik MP3 (URL)</label>
+                    <input type="url" id="inputMusicUrl" placeholder="https://..." class="w-full text-xs sm:text-sm border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-rose-400 focus:outline-none">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-2 pt-3 border-t border-gray-100">
+                    <button type="button" onclick="resetToDefaultData()" class="w-1/3 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium py-2.5 rounded-xl text-xs transition-colors">
+                        Reset Default
+                    </button>
+                    <button type="submit" class="w-2/3 bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2.5 rounded-xl text-xs transition-colors shadow-md">
+                        Simpan Perubahan ✨
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* State Variables */
+        let attemptCount = 0;
+        let isAudioPlaying = false;
+        
+        // Evasive responses and emoji list
+        const noResponses = [
+            "Gak bisa diklik wlee! 😜",
+            "Harus dimaafkin dong 🥺",
+            "Eits kejar aku kalau bisa! 🏃‍♂️",
+            "Mana bisa diklik 😜",
+            "Yahhh kepleset lagi! Maafin dong 💕",
+            "Tombol ini rusak, pencet 'Dimaafkan' aja! 😂",
+            "Masih berusaha nolak nih? Minta dicium ya? 💋",
+            "Gak bakal bisa diklik sampai kapanpun 😜",
+            "Harus dimaafkan titik! ❤️"
+        ];
+
+        const floatEmojis = ['🥺', '😜', '🙈', '💔', '🏃‍♂️', '💨', '💋', '✨', '💖'];
+
+        // Default sweet messages
+        let sweetMessages = [
+            "Makasih banyak ya udah mau maafin aku... 🥺❤️",
+            "Aku janji gak akan bikin kamu sedih atau kesel lagi! ✨",
+            "Kamu itu hal terindah dalam hidup aku, terima kasih udah selalu sabar 🥰",
+            "Sekarang senyum dong, makin cantik/ganteng deh kalau senyum! 😍🌹"
+        ];
+
+        /* Toast Helper Function (replaces alert) */
+        function showToast(message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'bg-gray-900/90 backdrop-blur-md text-white text-xs sm:text-sm px-5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-white/20 animate-toast';
+            toast.innerHTML = `<i class="fas fa-heart text-rose-400"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        /* Floating Background Particles Generator */
+        function initFloatingHearts() {
+            const container = document.getElementById('bgHeartsContainer');
+            const heartEmojis = ['💖', '💕', '💗', '🌸', '❤️', '✨', '🌹'];
+            const count = 20;
+
+            for (let i = 0; i < count; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'floating-heart';
+                heart.innerText = heartEmojis[Math.floor(Math.random() * heartEmojis.length)];
+                
+                heart.style.left = `${Math.random() * 100}vw`;
+                heart.style.fontSize = `${Math.random() * 20 + 12}px`;
+                heart.style.animationDuration = `${Math.random() * 6 + 6}s`;
+                heart.style.animationDelay = `${Math.random() * 5}s`;
+                
+                container.appendChild(heart);
+            }
+        }
+
+        /* Audio Player Logic & Controls */
+        function startAppWithAudio() {
+            const modal = document.getElementById('autoplayModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 500);
+
+            playAudio();
+        }
+
+        function playAudio() {
+            const audio = document.getElementById('bgMusic');
+            audio.play().then(() => {
+                isAudioPlaying = true;
+                updateAudioUI(true);
+            }).catch(err => {
+                console.log("Autoplay prevented:", err);
+                updateAudioUI(false);
+            });
+        }
+
+        function toggleAudio() {
+            const audio = document.getElementById('bgMusic');
+            if (isAudioPlaying) {
+                audio.pause();
+                isAudioPlaying = false;
+                updateAudioUI(false);
+            } else {
+                audio.play();
+                isAudioPlaying = true;
+                updateAudioUI(true);
+            }
+        }
+
+        function updateAudioUI(playing) {
+            const icon = document.getElementById('audioIcon');
+            if (playing) {
+                icon.className = 'fas fa-pause text-xs';
+            } else {
+                icon.className = 'fas fa-play text-xs pl-0.5';
+            }
+        }
+
+        function seekAudio(e) {
+            const audio = document.getElementById('bgMusic');
+            if (audio.duration) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
+                audio.currentTime = (clickX / width) * audio.duration;
+            }
+        }
+
+        // Live Audio Progress Updater
+        const bgAudio = document.getElementById('bgMusic');
+        bgAudio.addEventListener('timeupdate', () => {
+            const progressBar = document.getElementById('audioProgressBar');
+            if (bgAudio.duration) {
+                const pct = (bgAudio.currentTime / bgAudio.duration) * 100;
+                progressBar.style.width = `${pct}%`;
+            }
+        });
+
+        /* Evasive Runaway Button Logic */
+        const btnNo = document.getElementById('btnNo');
+        const btnYes = document.getElementById('btnYes');
+        const hoverNotice = document.getElementById('hoverNotice');
+
+        function moveNoButton(e) {
+            if (e) e.preventDefault();
+
+            attemptCount++;
+            
+            // Spawn floating emoji particle at button's current position
+            const rect = btnNo.getBoundingClientRect();
+            spawnFloatingEmoji(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+            // Display dynamic funny prompt
+            const noticeText = noResponses[Math.floor(Math.random() * noResponses.length)];
+            hoverNotice.querySelector('span').innerText = noticeText;
+            hoverNotice.classList.remove('opacity-0');
+
+            // Switch to fixed positioning
+            btnNo.style.position = 'fixed';
+
+            // Calculate safe bounds within viewport
+            const padding = 24;
+            const btnWidth = btnNo.offsetWidth || 130;
+            const btnHeight = btnNo.offsetHeight || 42;
+
+            const maxX = window.innerWidth - btnWidth - padding;
+            const maxY = window.innerHeight - btnHeight - padding;
+
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+
+            btnNo.style.left = `${randomX}px`;
+            btnNo.style.top = `${randomY}px`;
+
+            // Gradually scale up "Dimaafkan" button to entice clicking!
+            const currentScale = 1 + Math.min(attemptCount * 0.06, 0.45);
+            btnYes.style.transform = `scale(${currentScale})`;
+        }
+
+        function spawnFloatingEmoji(x, y) {
+            const emojiEl = document.createElement('div');
+            const randomEmoji = floatEmojis[Math.floor(Math.random() * floatEmojis.length)];
+            
+            emojiEl.className = 'fixed pointer-events-none z-50 text-2xl font-bold animate-emoji-pop';
+            emojiEl.innerText = randomEmoji;
+            emojiEl.style.left = `${x - 12}px`;
+            emojiEl.style.top = `${y - 12}px`;
+
+            document.body.appendChild(emojiEl);
+            setTimeout(() => emojiEl.remove(), 900);
+        }
+
+        // Attach evasive triggers
+        btnNo.addEventListener('mouseover', moveNoButton);
+        btnNo.addEventListener('touchstart', moveNoButton, { passive: false });
+        btnNo.addEventListener('pointerover', moveNoButton);
+        btnNo.addEventListener('click', (e) => {
+            e.preventDefault();
+            moveNoButton(e);
+        });
+
+        /* Forgiveness Acceptance Flow */
+        function acceptApology() {
+            const apologyCard = document.getElementById('apologyCard');
+            const successCard = document.getElementById('successCard');
+
+            // Fade out Screen 1
+            apologyCard.classList.add('scale-90', 'opacity-0');
+
+            setTimeout(() => {
+                apologyCard.classList.add('hidden');
+                
+                // Reset runaway button position back
+                btnNo.style.position = 'static';
+
+                // Reveal Screen 2
+                successCard.classList.remove('hidden');
+                setTimeout(() => {
+                    successCard.classList.remove('scale-95', 'opacity-0');
+                    successCard.classList.add('scale-100', 'opacity-100');
+                    
+                    // Trigger Heart Confetti Animation
+                    triggerHeartExplosion();
+
+                    // Render Line-by-Line Sweet Messages with Typewriter Effect
+                    renderSweetMessagesWithTyping();
+                }, 50);
+
+            }, 500);
+        }
+
+        /* Line-by-Line Typewriter Reveal */
+        function renderSweetMessagesWithTyping() {
+            const container = document.getElementById('sweetMessageContainer');
+            container.innerHTML = '';
+
+            sweetMessages.forEach((msg, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-rose-50/80 border border-rose-200 rounded-2xl p-3.5 text-xs sm:text-sm text-rose-900 flex items-start gap-2.5 shadow-sm animate-slide-up opacity-0';
+                card.style.animationDelay = `${index * 0.4 + 0.2}s`;
+                
+                card.innerHTML = `
+                    <span class="text-rose-500 mt-0.5 text-sm sm:text-base">💖</span>
+                    <span id="typeText_${index}" class="font-medium leading-relaxed"></span>
+                `;
+                container.appendChild(card);
+
+                // Sequential Typing Effect
+                setTimeout(() => {
+                    typeWriterText(`typeText_${index}`, msg);
+                }, (index * 400) + 400);
+            });
+        }
+
+        function typeWriterText(elementId, text) {
+            const target = document.getElementById(elementId);
+            if (!target) return;
+            let i = 0;
+            target.innerHTML = '';
+            
+            function type() {
+                if (i < text.length) {
+                    target.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, 30);
+                }
+            }
+            type();
+        }
+
+        /* Canvas Heart Explosive Confetti */
+        function triggerHeartExplosion() {
+            const canvas = document.getElementById('confettiCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const heartColors = ['#f43f5e', '#ec4899', '#fb7185', '#fda4af', '#e11d48'];
+            const particleCount = 75;
+
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 40,
+                    size: Math.random() * 16 + 10,
+                    color: heartColors[Math.floor(Math.random() * heartColors.length)],
+                    vx: (Math.random() - 0.5) * 16,
+                    vy: (Math.random() - 0.8) * 18,
+                    rotation: Math.random() * Math.PI * 2,
+                    vRot: (Math.random() - 0.5) * 0.2,
+                    opacity: 1,
+                    friction: 0.96,
+                    gravity: 0.28
+                });
+            }
+
+            function drawHeart(x, y, size, color, opacity, rotation) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(rotation);
+                ctx.globalAlpha = opacity;
+                ctx.fillStyle = color;
+                
+                ctx.beginPath();
+                const d = size;
+                ctx.moveTo(0, -d / 4);
+                ctx.bezierCurveTo(-d / 2, -d / 2, -d, 0, 0, d);
+                ctx.bezierCurveTo(d, 0, d / 2, -d / 2, 0, -d / 4);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            function animateConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let stillActive = false;
+
+                particles.forEach(p => {
+                    if (p.opacity > 0) {
+                        stillActive = true;
+                        p.vx *= p.friction;
+                        p.vy *= p.friction;
+                        p.vy += p.gravity;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.rotation += p.vRot;
+                        p.opacity -= 0.008;
+
+                        drawHeart(p.x, p.y, p.size, p.color, Math.max(0, p.opacity), p.rotation);
+                    }
+                });
+
+                if (stillActive) {
+                    requestAnimationFrame(animateConfetti);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            animateConfetti();
+        }
+
+        /* View Reset & Sharing Functions */
+        function resetView() {
+            const apologyCard = document.getElementById('apologyCard');
+            const successCard = document.getElementById('successCard');
+
+            successCard.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                successCard.classList.add('hidden');
+
+                attemptCount = 0;
+                btnYes.style.transform = 'scale(1)';
+                hoverNotice.classList.add('opacity-0');
+
+                apologyCard.classList.remove('hidden');
+                setTimeout(() => {
+                    apologyCard.classList.remove('scale-90', 'opacity-0');
+                }, 50);
+            }, 500);
+        }
+
+        function shareLove() {
+            const recipient = document.getElementById('displayRecipientName').innerText;
+            const text = `Aku udah maafin kamu kok! 💕🥰 Sayang banget sama kamu... (${window.location.href})`;
+            const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+        }
+
+        /* Custom Modal Form Handling */
+        function toggleCustomModal() {
+            const modal = document.getElementById('customModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function saveCustomization(e) {
+            e.preventDefault();
+
+            const file1 = document.getElementById('inputPhoto1').files[0];
+            const file2 = document.getElementById('inputPhoto2').files[0];
+            const recipient = document.getElementById('inputRecipient').value;
+            const customTitle = document.getElementById('inputTitle').value;
+            const customSubtitle = document.getElementById('inputSubtitle').value;
+            const customSweet = document.getElementById('inputSweetMessages').value;
+            const musicFile = document.getElementById('inputMusicFile').files[0];
+            const customMusicUrl = document.getElementById('inputMusicUrl').value;
+
+            // Recipient Name
+            if (recipient.trim() !== '') {
+                document.getElementById('displayRecipientName').innerText = `Untuk: ${recipient}`;
+            }
+
+            // Photo 1 Upload
+            if (file1) {
+                const reader1 = new FileReader();
+                reader1.onload = function(evt) {
+                    document.getElementById('displayPhoto1').src = evt.target.result;
+                }
+                reader1.readAsDataURL(file1);
+            }
+
+            // Photo 2 Upload
+            if (file2) {
+                const reader2 = new FileReader();
+                reader2.onload = function(evt) {
+                    document.getElementById('displayPhoto2').src = evt.target.result;
+                }
+                reader2.readAsDataURL(file2);
+            }
+
+            // Titles & Subtitles
+            if (customTitle.trim() !== '') {
+                document.getElementById('apologyTitle').innerText = customTitle;
+            }
+            if (customSubtitle.trim() !== '') {
+                document.getElementById('apologySubtitle').innerText = customSubtitle;
+            }
+
+            // Sweet Messages Array
+            if (customSweet.trim() !== '') {
+                sweetMessages = customSweet.split(',').map(item => item.trim()).filter(i => i.length > 0);
+            }
+
+            // Custom Audio File or URL
+            const audio = document.getElementById('bgMusic');
+            if (musicFile) {
+                const audioReader = new FileReader();
+                audioReader.onload = function(evt) {
+                    audio.src = evt.target.result;
+                    document.getElementById('audioTrackName').innerText = musicFile.name;
+                    playAudio();
+                }
+                audioReader.readAsDataURL(musicFile);
+            } else if (customMusicUrl.trim() !== '') {
+                audio.src = customMusicUrl;
+                document.getElementById('audioTrackName').innerText = "Lagu Pilihan";
+                playAudio();
+            }
+
+            toggleCustomModal();
+            showToast("Pengaturan berhasil disimpan! ✨");
+        }
+
+        function resetToDefaultData() {
+            document.getElementById('displayPhoto1').src = "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop";
+            document.getElementById('displayPhoto2').src = "https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop";
+            document.getElementById('displayRecipientName').innerText = "Untuk: Sayangku 💕";
+            document.getElementById('apologyTitle').innerText = "Maafin Aku Ya Sayang? 🥺👉👈";
+            document.getElementById('apologySubtitle').innerText = "Aku tau aku udah bikin kamu kesel dan kecewa... Aku beneran minta maaf ya dari lubuk hatiku yang paling dalam. Minta tolong maafin aku ya? 💕";
+            
+            sweetMessages = [
+                "Makasih banyak ya udah mau maafin aku... 🥺❤️",
+                "Aku janji gak akan bikin kamu sedih atau kesel lagi! ✨",
+                "Kamu itu hal terindah dalam hidup aku, terima kasih udah selalu sabar 🥰",
+                "Sekarang senyum dong, makin cantik deh kalau senyum! 😍🌹"
+            ];
+            
+            document.getElementById('customForm').reset();
+            toggleCustomModal();
+            showToast("Kembali ke pengaturan awal 💕");
+        }
+
+        window.onload = function() {
+            initFloatingHearts();
+            
+            // Adjust confetti canvas size dynamically
+            window.addEventListener('resize', () => {
+                const canvas = document.getElementById('confettiCanvas');
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        };
+    </script>
+</body>
+</html>
